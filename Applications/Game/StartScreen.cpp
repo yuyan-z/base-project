@@ -24,7 +24,7 @@ static inline void sleep_ticks(int n) {
         asm volatile("hlt");
 }
 
-static void draw_block(
+static void draw_rect(
     EcranBochs& vga,
     int x0, int y0,
     int w, int h,
@@ -55,11 +55,11 @@ void start_screen() {
         vga.clear(0);
 
         /* ===== DungeonExplorer (Title) ===== */
-        draw_block(vga, 120, 90, 400, 50, 30);
+        draw_rect(vga, 120, 90, 400, 50, 30);
 
         /* ===== Press Any Key (Blink) ===== */
         if (blink) {
-            draw_block(vga, 200, 240, 240, 30, 45);
+            draw_rect(vga, 200, 240, 240, 30, 45);
         }
 
         vga.swapBuffer();
