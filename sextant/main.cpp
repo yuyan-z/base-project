@@ -25,6 +25,7 @@
 #include <drivers/EcranBochs.h>
 
 #include <sextant/sprite.h>
+#include <Applications/Game/StartScreen.h>
 
 
 extern char __e_kernel,__b_kernel, __b_data, __e_data,  __b_stack, __e_load ;
@@ -133,6 +134,10 @@ extern "C" void Sextant_main(unsigned long magic, unsigned long addr){
 
 	// initialize pci bus to detect GPU address
 	checkBus(0);
+
+
+	// Show start screen
+	start_screen();
 
 
 	// demo_vga();
