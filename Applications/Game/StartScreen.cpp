@@ -1,65 +1,56 @@
 #include "StartScreen.h"
 
-#include <drivers/EcranBochs.h>
 #include <drivers/Clavier.h>
+#include <drivers/EcranBochs.h>
 #include <sextant/sprite.h>
-#include <sextant/types.h>
+#include <Applications/Draw/Draw.h>
 
-/* ---------- Utils ---------- */
-
-static bool any_key_pressed(Clavier& c) {
+static bool any_key_pressed(Clavier &c)
+{
     for (int i = 0; i < 256; i++)
         if (c.is_pressed(i))
             return true;
     return false;
 }
 
-static void wait_key_release(Clavier& c) {
+static void wait_key_release(Clavier &c)
+{
     while (any_key_pressed(c))
         asm volatile("hlt");
 }
 
-static inline void sleep_ticks(int n) {
+static inline void sleep_ticks(int n)
+{
     for (int i = 0; i < n; ++i)
         asm volatile("hlt");
 }
 
-static void draw_rect(
-    EcranBochs& vga,
-    int x0, int y0,
-    int w, int h,
-    ui8_t color
-) {
-    for (int y = y0; y < y0 + h; y++)
-        for (int x = x0; x < x0 + w; x++)
-            vga.paint(x, y, color);
-}
-
-/* ---------- Start Screen ---------- */
-
-void start_screen() {
-	ui16_t WIDTH = 640, HEIGHT = 400;
+void start_screen()
+{
+    ui16_t WIDTH = 640, HEIGHT = 400;
     EcranBochs vga(WIDTH, HEIGHT, VBE_MODE::_8);
     Clavier c;
 
     vga.init();
     vga.clear(0);
-
     vga.set_palette(palette_vga);
 
     wait_key_release(c);
 
     bool blink = false;
 
-    while (true) {
+    while (true)
+    {
         vga.clear(0);
 
-        /* ===== DungeonExplorer (Title) ===== */
-        draw_rect(vga, 120, 90, 400, 50, 30);
+        // title Dungeon Explorer
+        draw_text(vga, "DUNGEON", 152, 80, 3, 15);  // 640/2 - (7*16)*3/2 = 152
+        draw_text(vga, "EXPLORER", 128, 136, 3, 15);  // 640/2 - (8*16)*3/2 = 128
 
         /* ===== Press Any Key (Blink) ===== */
-        if (blink) {
-            draw_rect(vga, 200, 240, 240, 30, 45);
+        if (blink)
+        {
+            draw_text(vga, "PRESS ANY KEY", 216, 220, 1, 50);  // 640/2 - (13*16)*1/2 = 216
         }
 
         vga.swapBuffer();
@@ -71,7 +62,6 @@ void start_screen() {
         sleep_ticks(30);
     }
 
-    /* ===== Exit start screen ===== */
     vga.clear(0);
     vga.swapBuffer();
 }
