@@ -14,16 +14,15 @@ static bool any_key_pressed(Clavier &c)
     return false;
 }
 
-static void wait_key_release(Clavier &c)
-{
-    while (any_key_pressed(c))
-        asm volatile("hlt");
-}
+// static inline void sleep_ticks(int n)
+// {
+//     for (int i = 0; i < n; ++i)
+//         asm volatile("hlt");
+// }
 
 static inline void sleep_ticks(int n)
 {
-    for (int i = 0; i < n; ++i)
-        asm volatile("hlt");
+    for (volatile int i = 0; i < n * 100000; ++i) { }
 }
 
 void start_screen()
@@ -36,13 +35,14 @@ void start_screen()
     vga.clear(0);
     vga.set_palette(palette_vga);
 
-    wait_key_release(c);
-
     bool blink = false;
 
     while (true)
     {
         vga.clear(0);
+
+        // bool pressed = any_key_pressed(c);
+        // draw_text(vga, pressed ? "P" : "N", 10, 10, 1, 15);
 
         // title Dungeon Explorer
         draw_text(vga, "DUNGEON", 152, 60, 3, 15);  // 640/2 - (7*16)*3/2 = 152
