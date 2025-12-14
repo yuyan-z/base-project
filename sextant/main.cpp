@@ -25,7 +25,7 @@
 #include <drivers/EcranBochs.h>
 
 #include <sextant/sprite.h>
-#include <Applications/Game/StartScreen.h>
+#include <Applications/StartScreen/StartScreen.h>
 
 
 extern char __e_kernel,__b_kernel, __b_data, __e_data,  __b_stack, __e_load ;
