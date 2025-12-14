@@ -19,7 +19,8 @@ void draw_sprite_scaled(
     int x0,
     int y0,
     int scale,
-    ui8_t light
+    ui8_t light=15,
+    bool mirror_x=false
 );
 
 void draw_text(
@@ -29,5 +30,17 @@ void draw_text(
     int y,
     int scale,
     ui8_t color);
+
+void draw_tile(
+    EcranBochs &vga,
+    const unsigned char *sprite,
+    int x,
+    int y,
+    int w,
+    int h,
+    int sprite_w,
+    int sprite_h,
+    int scale
+);
 
 #endif

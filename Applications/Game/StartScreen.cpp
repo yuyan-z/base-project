@@ -4,6 +4,7 @@
 #include <drivers/EcranBochs.h>
 #include <sextant/sprite.h>
 #include <Applications/Draw/Draw.h>
+#include <Applications/Draw/sprite_tile.h>
 
 static bool any_key_pressed(Clavier &c)
 {
@@ -44,14 +45,20 @@ void start_screen()
         vga.clear(0);
 
         // title Dungeon Explorer
-        draw_text(vga, "DUNGEON", 152, 80, 3, 15);  // 640/2 - (7*16)*3/2 = 152
-        draw_text(vga, "EXPLORER", 128, 136, 3, 15);  // 640/2 - (8*16)*3/2 = 128
+        draw_text(vga, "DUNGEON", 152, 60, 3, 15);  // 640/2 - (7*16)*3/2 = 152
+        draw_text(vga, "EXPLORER", 128, 126, 3, 15);  // 640/2 - (8*16)*3/2 = 128
 
-        /* ===== Press Any Key (Blink) ===== */
+        // Press Any Key
         if (blink)
         {
-            draw_text(vga, "PRESS ANY KEY", 216, 220, 1, 50);  // 640/2 - (13*16)*1/2 = 216
+            draw_text(vga, "PRESS ANY KEY", 216, 200, 1, 50);  // 640/2 - (13*16)*1/2 = 216
         }
+
+        draw_tile(vga, sprite_wall, 0, 340, 640, 60, SPRITE_WALL_W, SPRITE_WALL_H, 5);
+
+        draw_sprite_scaled(vga, sprite_data, SPRITE_WIDTH, SPRITE_HEIGHT, 210, 250, 3);
+        draw_sprite_scaled(vga, sprite_data, SPRITE_WIDTH, SPRITE_HEIGHT, 160, 250, 3);
+        draw_sprite_scaled(vga, sprite_data, SPRITE_WIDTH, SPRITE_HEIGHT, 320, 250, 3, 15, true);
 
         vga.swapBuffer();
 
