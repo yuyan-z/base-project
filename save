@@ -1,0 +1,224 @@
+Cahier des charges
+Intégration d’un Large Language Model (LLM) en entreprise
+1. Contexte et objectifs
+
+L’entreprise souhaite intégrer un Large Language Model (LLM) via API afin d’automatiser, d’assister et d’optimiser plusieurs processus métiers, notamment la rédaction, l’analyse de documents, le support interne et l’aide à la décision.
+
+Ce document a pour objectif de :
+
+définir les critères de sélection d’un LLM,
+
+identifier les cas d’usage prioritaires,
+
+estimer les volumes de tokens et la latence associée,
+
+formuler des recommandations de choix et d’architecture
+
+2. Critères de sélection d’un LLM
+2.1 Prix (coût par token)
+
+Les LLM sont facturés majoritairement en fonction :
+
+des tokens en entrée,
+
+des tokens en sortie.
+
+Le prix est un critère critique pour les usages à fort volume (emails, support).
+Il convient d’analyser :
+
+le coût par 1 000 / 1 million de tokens,
+
+la différence de prix entre modèles standards et modèles à raisonnement avancé,
+
+la prévisibilité du coût mensuel.  
+
+2.2 Fenêtre de contexte (Context Window)
+
+La fenêtre de contexte correspond au nombre maximal de tokens qu’un modèle peut traiter dans une requête.
+
+Elle conditionne :
+
+l’analyse de documents longs,
+
+la conservation de l’historique conversationnel,
+
+la complexité des prompts.
+
+Une fenêtre trop limitée impose des découpages artificiels et dégrade la qualité.  
+
+2.3 Capacités de raisonnement (Reasoning)
+
+Certains modèles sont optimisés pour le raisonnement logique et multi-étapes :
+
+analyse structurée,
+
+comparaison d’options,
+
+détection d’incohérences,
+
+planification.
+
+Ces capacités sont indispensables pour les cas d’aide à la décision et d’analyse métier complexe.  
+
+2.4 Knowledge Cutoff
+
+Le knowledge cutoff correspond à la date limite des connaissances du modèle.
+
+Il est déterminant pour :
+
+les informations réglementaires,
+
+le contexte économique récent,
+
+les technologies et normes actuelles.
+
+Sans mécanisme de RAG (Retrieval-Augmented Generation), un cutoff trop ancien peut limiter la pertinence. 
+
+2.5 Support multimodal (entrée / sortie)
+
+Le LLM peut supporter :
+
+en entrée : texte, images (PDF scannés, graphiques),
+
+en sortie : texte structuré, tableaux, code, éventuellement images.
+
+La multimodalité est essentielle pour les usages documentaires transverses.
+
+2.6 Latence (temps de réponse)
+
+La latence correspond au temps entre l’envoi de la requête et la réception de la réponse.
+
+Elle inclut :
+
+le temps réseau,
+
+le temps de calcul du modèle,
+
+le temps de génération des tokens. 
+
+Indicateurs clés :
+
+TTFT (Time To First Token),
+
+temps de réponse total,
+
+stabilité (p95, p99).
+
+Ordres de grandeur indicatifs :
+
+modèles légers : 0,5 à 2 s,
+
+modèles avancés : 2 à 10 s,
+
+modèles reasoning : jusqu’à 20–30 s pour des sorties longues.
+
+La latence est critique dès qu’un utilisateur humain est dans la boucle.  
+
+3. Cas d’usage et estimation des volumes
+3.1 Réponse automatique à des emails professionnels
+
+Description
+Génération d’une réponse professionnelle à partir d’un email reçu et d’un prompt de consignes (ton, langue, rôle).
+
+Estimation de tokens
+
+Email reçu : ~200–300 mots (260–390 tokens)
+
+Prompt : ~100 mots (130 tokens)
+
+Email généré : ~150 mots (200 tokens)
+
+Total estimé : ~600–720 tokens
+Latence cible : < 2 secondes  
+
+
+3.2 Résumé de documents internes
+
+Description
+Résumé exécutif de rapports, procédures internes ou documents réglementaires.
+
+Estimation de tokens
+
+Document : ~2 000 mots (2 600–3 000 tokens)
+
+Prompt : ~150 mots (200 tokens)
+
+Résumé : ~300 mots (400 tokens)
+
+Total estimé : ~3 000–3 600 tokens
+Latence cible : < 8 secondes
+
+3.3 Assistant d’aide à la décision
+
+Description
+Analyse structurée à partir d’hypothèses, contraintes et objectifs fournis en entrée.
+
+Estimation de tokens
+
+Données d’entrée : ~800 mots (1 000 tokens)
+
+Prompt de raisonnement : ~200 mots (260 tokens)
+
+Sortie structurée : ~400 mots (520 tokens)
+
+Total estimé : ~1 800 tokens
+Latence cible : < 15–20 secondes  
+
+3.4 Support interne et FAQ intelligente
+
+Description
+Réponse aux questions internes à partir d’une base documentaire (souvent via RAG).
+
+Estimation de tokens
+
+Question : ~50 mots (65 tokens)
+
+Contexte injecté : ~500 mots (650 tokens)
+
+Réponse : ~150 mots (200 tokens)
+
+Total estimé : ~900 tokens
+Latence cible : < 2 secondes  
+
+4. Recommandations de choix
+4.1 Approche multi-modèles
+
+Il est recommandé de ne pas utiliser un seul modèle pour tous les usages :
+
+modèles légers et rapides pour les tâches à fort volume,
+
+modèles avancés ou reasoning pour les analyses complexes.
+
+4.2 Arbitrage coût – latence – qualité
+
+Un compromis structurel existe :
+
+modèles rapides → coût réduit mais raisonnement limité,
+
+modèles reasoning → meilleure qualité mais plus lents et coûteux.
+
+Bonnes pratiques :
+
+routage dynamique selon le cas d’usage,
+
+limitation stricte des tokens de sortie,
+
+streaming pour réduire la latence perçue,
+
+mise en cache des réponses fréquentes.
+
+5. Conclusion
+
+L’intégration d’un LLM en entreprise doit être guidée par :
+
+les besoins métiers réels,
+
+la maîtrise des coûts par token,
+
+la latence acceptable par usage,
+
+et la qualité de raisonnement requise.
+
+Un choix pertinent repose sur un principe simple :
+
+le bon modèle, pour le bon usage, au bon coût et avec la bonne latence.  
