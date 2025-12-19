@@ -1,8 +1,8 @@
 Selon la documentation d’OpenAI et de Google Gemini, un token correspond à environ 4 caractères anglais, et 100 tokens correspondent à environ 75 mots en anglais.
 Ainsi, on peut considérer : 1 mot anglais ≈ 1,33 token.  
 
-Selon les travaux d’Aleksandar et al., la premium correspond au ratio entre le nombre de tokens de la phrase originale et celui de sa traduction.
-
+Selon les travaux d’Aleksandar et al., le premium correspond au ratio entre le nombre de tokens de la phrase originale et celui de sa traduction.
+les premiums en tokens par rapport à l’anglais sont présentées dans le tableau 1.
 
 What are tokens and how to count them? | OpenAI Help Center --- help.openai.com. https://help.openai.com/en/articles/4936856-what-are-tokens-and-how-to-count-them, [Accessed 19-12-2025]
 Understand and count tokens  |  Gemini API  |  Google AI for Developers --- ai.google.dev. https://ai.google.dev/gemini-api/docs/tokens?lang=python, [Accessed 19-12-2025]
