@@ -1,0 +1,41 @@
+from dataclasses import asdict
+from typing import Dict, Any, Optional, Type
+
+from configs.pipeline_config import VARConfig
+from pipelines.base_pipeline import BasePipeline
+from pipelines.var_pipeline import VARPipeline
+
+PIPELINE_REGISTRY: Dict[str, Dict[str, Any]] = {
+    "VAR": {
+        "config_cls": VARConfig,
+        "pipeline_cls": VARPipeline,
+    },
+    # "LSTM": {...}
+    # "RF": {...}
+}
+
+def get_default_parameters(model_str: str) -> Dict[str, Any]:
+    if model_str not in PIPELINE_REGISTRY:
+        raise ValueError(f"Unknown model_str={model_str}")
+    cfg_cls = PIPELINE_REGISTRY[model_str]["config_cls"]
+    return asdict(cfg_cls())
+
+def build_pipeline(
+    model_str: str,
+    overrides: Optional[Dict[str, Any]] = None
+) -> BasePipeline:
+    if model_str not in PIPELINE_REGISTRY:
+        raise ValueError(f"Unknown model_str={model_str}")
+
+    overrides = overrides or {}
+
+    cfg_cls: Type = PIPELINE_REGISTRY[model_str]["config_cls"]
+    pipe_cls: Type[BasePipeline] = PIPELINE_REGISTRY[model_str]["pipeline_cls"]
+
+    allowed = set(cfg_cls.__dataclass_fields__.keys())
+    unknown = set(overrides) - allowed
+    if unknown:
+        raise ValueError(f"Unknown parameters for {model_str}: {unknown}")
+
+    config = cfg_cls(**overrides)
+    return pipe_cls(config)
