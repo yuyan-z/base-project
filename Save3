@@ -1,0 +1,88 @@
+from __future__ import annotations
+
+from dataclasses import dataclass, fields
+from typing import Any, Dict, Type
+
+
+# --------- Base ---------
+@dataclass
+class ModelConfig:
+    """Base class for model configs."""
+    model_type: str
+
+
+# --------- Per-model configs (defaults live here) ---------
+@dataclass
+class LightGBMConfig(ModelConfig):
+    # defaults
+    num_leaves: int = 31
+    learning_rate: float = 0.05
+    n_estimators: int = 200
+    max_depth: int = -1
+    subsample: float = 1.0
+    colsample_bytree: float = 1.0
+    reg_alpha: float = 0.0
+    reg_lambda: float = 0.0
+    random_state: int = 42
+
+    model_type: str = "lightgbm"
+
+
+@dataclass
+class RandomForestConfig(ModelConfig):
+    n_estimators: int = 300
+    max_depth: int | None = None
+    min_samples_split: int = 2
+    min_samples_leaf: int = 1
+    max_features: str | float | None = "sqrt"
+    bootstrap: bool = True
+    n_jobs: int = -1
+    random_state: int = 42
+
+    model_type: str = "random_forest"
+
+
+@dataclass
+class LSTMConfig(ModelConfig):
+    # example: adjust to your torch code
+    hidden_size: int = 64
+    num_layers: int = 2
+    dropout: float = 0.1
+    seq_len: int = 20
+    lr: float = 1e-3
+    batch_size: int = 256
+    epochs: int = 20
+
+    model_type: str = "lstm"
+
+
+# --------- Registry ---------
+MODEL_CONFIG_REGISTRY: Dict[str, Type[ModelConfig]] = {
+    "lightgbm": LightGBMConfig,
+    "random_forest": RandomForestConfig,
+    "lstm": LSTMConfig,
+}
+
+
+def _validate_overrides(config_cls: Type[ModelConfig], overrides: Dict[str, Any]) -> None:
+    """Raise if user passes unknown fields (typos, wrong params for model)."""
+    valid = {f.name for f in fields(config_cls)}
+    unknown = set(overrides) - valid
+    if unknown:
+        unknown_str = ", ".join(sorted(unknown))
+        raise ValueError(
+            f"Unknown override field(s) for {config_cls.__name__}: {unknown_str}. "
+            f"Valid fields: {sorted(valid)}"
+        )
+
+
+def build_model_config(model_type: str, overrides: Dict[str, Any] | None = None) -> ModelConfig:
+    """Create a typed config object with defaults + overrides."""
+    if model_type not in MODEL_CONFIG_REGISTRY:
+        raise ValueError(f"Unknown model_type: {model_type}. Choose from {list(MODEL_CONFIG_REGISTRY)}")
+
+    config_cls = MODEL_CONFIG_REGISTRY[model_type]
+    overrides = overrides or {}
+
+    _validate_overrides(config_cls, overrides)
+    return config_cls(**overrides)
