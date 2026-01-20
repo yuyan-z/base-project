@@ -1,32 +1,25 @@
-def apply_signed_log(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    df = df.copy()
-
-    X = df[cols].to_numpy(dtype=float, copy=False)
-    Y = np.sign(X) * np.log1p(np.abs(X))
-
-    log_df = pd.DataFrame(Y, index=df.index, columns=[c + "_log" for c in cols])
-    return pd.concat([df.drop(columns=cols), log_df], axis=1)
-
-import numpy as np
 import pandas as pd
 
-def inverse_signed_log(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
-    """
-    Inverse of signed log:
-    y -> sign(y) * (exp(|y|) - 1)
+class RollingStandardScaler:
+    def __init__(self, window=None, ddof=0):
+        self.window = window
+        self.ddof = ddof
+        self.mean_ = None
+        self.std_ = None
 
-    - new columns: remove '_log' suffix
-    - original cols are removed
-    """
-    df = df.copy()
+    def fit_transform(self, df: pd.DataFrame) -> pd.DataFrame:
+        if self.window is None:
+            self.mean_ = df.expanding(min_periods=1).mean()
+            self.std_ = df.expanding(min_periods=1).std(ddof=self.ddof)
+        else:
+            self.mean_ = df.rolling(self.window, min_periods=1).mean()
+            self.std_ = df.rolling(self.window, min_periods=1).std(ddof=self.ddof)
 
-    X = df[cols].to_numpy(dtype=float, copy=False)
-    Y = np.sign(X) * (np.expm1(np.abs(X)))   # exp(|x|) - 1, numerically stable
+        return (df - self.mean_) / self.std_
 
-    # 去掉 _log 后缀
-    new_cols = [c[:-4] if c.endswith("_log") else f"{c}_inv" for c in cols]
+    def inverse_transform(self, df_scaled: pd.DataFrame) -> pd.DataFrame:
+        if self.mean_ is None or self.std_ is None:
+            raise RuntimeError("Must call fit_transform first")
 
-    inv_df = pd.DataFrame(Y, index=df.index, columns=new_cols)
-    return pd.concat([df.drop(columns=cols), inv_df], axis=1)
-
-
+        # index / columns 对齐是关键
+        return df_scaled * self.std_ + self.mean_
