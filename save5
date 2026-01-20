@@ -1,0 +1,32 @@
+def apply_signed_log(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    df = df.copy()
+
+    X = df[cols].to_numpy(dtype=float, copy=False)
+    Y = np.sign(X) * np.log1p(np.abs(X))
+
+    log_df = pd.DataFrame(Y, index=df.index, columns=[c + "_log" for c in cols])
+    return pd.concat([df.drop(columns=cols), log_df], axis=1)
+
+import numpy as np
+import pandas as pd
+
+def inverse_signed_log(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
+    """
+    Inverse of signed log:
+    y -> sign(y) * (exp(|y|) - 1)
+
+    - new columns: remove '_log' suffix
+    - original cols are removed
+    """
+    df = df.copy()
+
+    X = df[cols].to_numpy(dtype=float, copy=False)
+    Y = np.sign(X) * (np.expm1(np.abs(X)))   # exp(|x|) - 1, numerically stable
+
+    # 去掉 _log 后缀
+    new_cols = [c[:-4] if c.endswith("_log") else f"{c}_inv" for c in cols]
+
+    inv_df = pd.DataFrame(Y, index=df.index, columns=new_cols)
+    return pd.concat([df.drop(columns=cols), inv_df], axis=1)
+
+
