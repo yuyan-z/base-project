@@ -1,0 +1,4 @@
+def merge_chain_maps(d1: dict, d2: dict) -> dict:
+    out = {k: d2.get(v, v) for k, v in d1.items()}
+    out.update({k: v for k, v in d2.items() if k not in d1.values()})
+    return out
