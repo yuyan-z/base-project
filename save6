@@ -1,0 +1,141 @@
+"""
+Complete, runnable Optuna example with a dict-based config.
+
+What it does:
+- base_config is a normal dict
+- suggest_config(trial, base_config) returns a new dict with tunable params filled in
+- objective(trial) trains/evaluates a RandomForestRegressor with TimeSeriesSplit
+- study.optimize runs many trials and finds best hyperparameters
+
+Install:
+    pip install optuna scikit-learn numpy
+"""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from dataclasses import dataclass
+from typing import Dict, Any, Tuple
+
+import numpy as np
+import optuna
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import TimeSeriesSplit
+from sklearn.metrics import mean_squared_error
+
+
+# -------------------------
+# 1) Example data (replace with your real features)
+# -------------------------
+def make_toy_timeseries_data(n: int = 2000, n_features: int = 20, seed: int = 42) -> Tuple[np.ndarray, np.ndarray]:
+    rng = np.random.default_rng(seed)
+    X = rng.normal(size=(n, n_features))
+    # Create a drifting target to mimic time-series-ish behavior
+    t = np.arange(n)
+    y = 0.3 * X[:, 0] - 0.2 * X[:, 1] + 0.001 * t + rng.normal(scale=0.5, size=n)
+    return X, y
+
+
+X, y = make_toy_timeseries_data()
+
+
+# -------------------------
+# 2) Base config as a normal dict
+# -------------------------
+base_config: Dict[str, Any] = {
+    "model": "random_forest",
+    "model_params": {
+        # defaults (will be overwritten by Optuna)
+        "n_estimators": 200,
+        "max_depth": 10,
+        "min_samples_leaf": 5,
+        "max_features": 0.5,
+        "random_state": 42,
+        "n_jobs": -1,
+    },
+    "cv": {
+        "n_splits": 5,  # TimeSeriesSplit folds
+    },
+    "metric": "rmse",
+}
+
+
+# -------------------------
+# 3) Suggest config (tunable parameters)
+# -------------------------
+def suggest_config(trial: optuna.Trial, base_config: Dict[str, Any]) -> Dict[str, Any]:
+    config = deepcopy(base_config)
+
+    config["model_params"]["n_estimators"] = trial.suggest_int(
+        "n_estimators", 100, 800, step=100
+    )
+
+    config["model_params"]["max_depth"] = trial.suggest_int(
+        "max_depth", 3, 20
+    )
+
+    config["model_params"]["min_samples_leaf"] = trial.suggest_int(
+        "min_samples_leaf", 1, 50
+    )
+
+    config["model_params"]["max_features"] = trial.suggest_float(
+        "max_features", 0.2, 1.0
+    )
+
+    # (Optional) You can tune split size / CV too, but usually keep CV fixed.
+    # config["cv"]["n_splits"] = trial.suggest_int("n_splits", 3, 8)
+
+    return config
+
+
+# -------------------------
+# 4) Train/evaluate (TimeSeries CV)
+# -------------------------
+def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
+    return float(np.sqrt(mean_squared_error(y_true, y_pred)))
+
+
+def objective(trial: optuna.Trial) -> float:
+    config = suggest_config(trial, base_config)
+
+    model = RandomForestRegressor(**config["model_params"])
+    tscv = TimeSeriesSplit(n_splits=config["cv"]["n_splits"])
+
+    scores = []
+    for train_idx, val_idx in tscv.split(X):
+        X_train, X_val = X[train_idx], X[val_idx]
+        y_train, y_val = y[train_idx], y[val_idx]
+
+        model.fit(X_train, y_train)
+        pred = model.predict(X_val)
+        scores.append(rmse(y_val, pred))
+
+    # Average CV RMSE (minimize)
+    mean_rmse = float(np.mean(scores))
+
+    # Log extra info in Optuna UI (optional)
+    trial.set_user_attr("cv_rmse_scores", scores)
+
+    return mean_rmse
+
+
+# -------------------------
+# 5) Run Optuna study
+# -------------------------
+if __name__ == "__main__":
+    # Use TPE sampler by default; set seed for reproducibility
+    sampler = optuna.samplers.TPESampler(seed=42)
+
+    study = optuna.create_study(direction="minimize", sampler=sampler)
+    study.optimize(objective, n_trials=50)
+
+    print("\nBest score (RMSE):", study.best_value)
+    print("Best params:", study.best_params)
+
+    # Build a final config using best params
+    final_config = deepcopy(base_config)
+    final_config["model_params"].update(study.best_params)
+
+    print("\nFinal config model_params:")
+    for k, v in final_config["model_params"].items():
+        print(f"  {k}: {v}")
